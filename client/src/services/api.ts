@@ -776,6 +776,71 @@ export const nutritionAPI = {
     }
   },
 
+  async getUsageStats(): Promise<any> {
+    try {
+      console.log("📊 Fetching usage stats...");
+      const response = await api.get("/nutrition/usage-stats");
+
+      if (response.data.success) {
+        console.log("✅ Usage stats fetched successfully");
+        return response.data.data;
+      }
+
+      throw new APIError(response.data.error || "Failed to fetch usage stats");
+    } catch (error) {
+      console.error("💥 Get usage stats error:", error);
+      return {
+        meal_scans_used: 0,
+        meal_scans_limit: 100,
+        ai_requests_used: 0,
+        ai_requests_limit: 1000,
+      };
+    }
+  },
+
+  async trackWaterIntake(cups: number, date?: string): Promise<any> {
+    try {
+      console.log("💧 Tracking water intake...");
+      const response = await api.post("/nutrition/water-intake", {
+        cups_consumed: cups,
+        date: date || new Date().toISOString().split("T")[0],
+      });
+
+      if (response.data.success) {
+        console.log("✅ Water intake tracked successfully");
+        return response.data;
+      }
+
+      throw new APIError(response.data.error || "Failed to track water intake");
+    } catch (error) {
+      console.error("💥 Track water intake error:", error);
+      if (error instanceof APIError) throw error;
+      throw new APIError(
+        "Network error while tracking water intake",
+        undefined,
+        undefined,
+        true
+      );
+    }
+  },
+
+  async getWaterIntake(date: string): Promise<any> {
+    try {
+      console.log("💧 Fetching water intake for date:", date);
+      const response = await api.get(`/nutrition/water-intake/${date}`);
+
+      if (response.data.success) {
+        console.log("✅ Water intake fetched successfully");
+        return response.data.data;
+      }
+
+      return { cups_consumed: 0, milliliters_consumed: 0 };
+    } catch (error) {
+      console.error("💥 Get water intake error:", error);
+      return { cups_consumed: 0, milliliters_consumed: 0 };
+    }
+  },
+
   async addManualMeal(mealData: {
     mealName: string;
     calories: string;
